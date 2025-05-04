@@ -1,0 +1,123 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+<!-- This file shows how to design a first-run page that provides a welcome screen to the user about the features of the add-in. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TaxMate 365</title>
+
+    <!-- Office JavaScript API -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <!-- Dynamic content section -->
+    <div id="dynamic-content" style="width: 93%; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; overflow-wrap: break-word;">
+        <!-- Content added by the submit button will appear here -->
+    </div>
+
+    <!-- Add a text box and button for user messages -->
+    <div class="ms-welcome__input" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+        <input type="text" id="user-input" class="ms-TextField" placeholder="Type something here..." style="flex: 4; padding: 8px;" />
+        <button id="submit-button" class="ms-Button ms-Button--primary" style="flex: 1; padding: 8px;">Submit</button>
+    </div>
+
+    <section id="sideload-msg" class="ms-welcome__main">
+        <h2 class="ms-font-xl">Please <a target="_blank" href="https://learn.microsoft.com/office/dev/add-ins/testing/test-debug-office-add-ins#sideload-an-office-add-in-for-testing">sideload</a> your add-in to see app body.</h2>
+    </section>
+    <main id="app-body" class="ms-welcome__main" style="display: none;">
+
+    </main>
+
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', async function () {
+            let user = "";
+
+            // Function to append received messages to the chat window
+            function appendReceivedMessage(messageFrom,message) {
+                const dynamicContentDiv = document.getElementById('dynamic-content');
+                user = Office.context.mailbox.userProfile.displayName;
+                // Display the received message aligned to the left
+                if(user != messageFrom){
+                    const receivedMessageContainer = document.createElement('div');
+                    receivedMessageContainer.style.border = '1px solid #28A745'; // Green outline
+                    receivedMessageContainer.style.borderRadius = '5px';
+                    receivedMessageContainer.style.padding = '8px';
+                    receivedMessageContainer.style.marginBottom = '5px';
+                    receivedMessageContainer.style.display = 'block'; // Ensure vertical stacking
+                    receivedMessageContainer.style.backgroundColor = '#E8F5E9'; // Light green background
+                    receivedMessageContainer.style.textAlign = 'left'; // Align text to the left
+                    receivedMessageContainer.textContent = `${message}`;
+                    dynamicContentDiv.appendChild(receivedMessageContainer);
+                }
+            }
+
+            // Function to send user message and display the reply
+            async function addContent() {
+                const userInput = document.getElementById('user-input').value;
+                user = Office.context.mailbox.userProfile.displayName;
+
+                if (userInput.trim()) {
+                    const dynamicContentDiv = document.getElementById('dynamic-content');
+
+                    // Display the user's message aligned to the right
+                    const userMessageContainer = document.createElement('div');
+                    userMessageContainer.style.border = '1px solid #0078D4'; // Blue outline
+                    userMessageContainer.style.borderRadius = '5px';
+                    userMessageContainer.style.padding = '8px';
+                    userMessageContainer.style.marginBottom = '5px';
+                    userMessageContainer.style.display = 'block'; // Ensure vertical stacking
+                    userMessageContainer.style.backgroundColor = '#f3f2f1'; // Light background
+                    userMessageContainer.style.textAlign = 'right'; // Align text to the right
+                    userMessageContainer.textContent = `You: ${userInput}`;
+                    dynamicContentDiv.appendChild(userMessageContainer);
+
+                    // Clear the input field
+                    document.getElementById('user-input').value = '';
+
+                    try {
+                        // Call the sendMessage function from chat.js
+                        await sendMessage(user, `${user}: ${userInput}`);
+
+                    } catch (error) {
+                        // Display an error message
+                        const errorMessageContainer = document.createElement('div');
+                        errorMessageContainer.style.border = '1px solid #D83B01'; // Red outline
+                        errorMessageContainer.style.borderRadius = '5px';
+                        errorMessageContainer.style.padding = '8px';
+                        errorMessageContainer.style.marginBottom = '5px';
+                        errorMessageContainer.style.display = 'block'; // Ensure vertical stacking
+                        errorMessageContainer.style.backgroundColor = '#FDECEA'; // Light red background
+                        errorMessageContainer.style.textAlign = 'left'; // Align text to the left
+                        errorMessageContainer.textContent = 'Error: Unable to fetch the reply. Please try again later.';
+                        dynamicContentDiv.appendChild(errorMessageContainer);
+                    }
+                }
+            }
+
+            document.getElementById('submit-button').addEventListener('click', addContent);
+            document.getElementById('user-input').addEventListener('keypress', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent form submission if inside a form
+                    addContent();
+                }
+            });
+
+            // Expose appendReceivedMessage globally for chat.js to call
+            window.appendReceivedMessage = appendReceivedMessage;
+        });
+    </script>
+    <script src="chat.js"></script>
+</body>
+</html>
