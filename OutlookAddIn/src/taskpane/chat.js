@@ -31,17 +31,17 @@ const receiveMessage = async () => {
     if (!currentUser)
         return;
     try {
-        await connection.on("ReceiveMessage", (user, message) => {
-         appendReceivedMessage(user,message);
+        await connection.on("ReceiveMessage", (user, messagegroup, message) => {
+         appendReceivedMessage(user,messagegroup,message);
        })
     } catch (error) {
         console.log(error);
     }
 }
 
-const sendMessage = async (user,message) => {
+const sendMessage = async (user,messagegroup,message) => {
     try {
-        await connection.invoke('SendMessage', user, message);
+        await connection.invoke('SendMessage', user, messagegroup, message);
         return "message sent successfully";
     } catch (error) {
         console.log(error);

@@ -43,13 +43,15 @@
     <script type="module">
         document.addEventListener('DOMContentLoaded', async function () {
             let user = "";
-
+            let messagegroup = "";
             // Function to append received messages to the chat window
-            function appendReceivedMessage(messageFrom,message) {
+            function appendReceivedMessage(messageFrom,messagegroup,message) {
                 const dynamicContentDiv = document.getElementById('dynamic-content');
                 user = Office.context.mailbox.userProfile.displayName;
+                console.log("User: " + user);
+                console.log("Received message from: " + Office.context.mailbox.item.from.emailAddress);
                 // Display the received message aligned to the left
-                if(user != messageFrom){
+                if(messagegroup == Office.context.mailbox.item.from.emailAddress){
                     const receivedMessageContainer = document.createElement('div');
                     receivedMessageContainer.style.border = '1px solid #28A745'; // Green outline
                     receivedMessageContainer.style.borderRadius = '5px';
@@ -67,7 +69,7 @@
             async function addContent() {
                 const userInput = document.getElementById('user-input').value;
                 user = Office.context.mailbox.userProfile.displayName;
-
+                messagegroup = Office.context.mailbox.item.from.emailAddress
                 if (userInput.trim()) {
                     const dynamicContentDiv = document.getElementById('dynamic-content');
 
@@ -88,7 +90,7 @@
 
                     try {
                         // Call the sendMessage function from chat.js
-                        await sendMessage(user, `${user}: ${userInput}`);
+                        await sendMessage(user,messagegroup, `${user}: ${userInput}`);
 
                     } catch (error) {
                         // Display an error message
